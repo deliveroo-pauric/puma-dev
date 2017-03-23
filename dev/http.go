@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	corehttputil "net/http/httputil"
 	"os"
 	"path"
 	"path/filepath"
@@ -197,9 +198,15 @@ func (h *HTTPServer) proxyReq(w http.ResponseWriter, req *http.Request) error {
 
 func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if h.Debug {
-		fmt.Fprintf(os.Stderr, "%s: %s '%s' (host=%s)\n",
+
+    requestDump, err := corehttputil.DumpRequest(req, true)
+    if err != nil {
+        panic(err)
+      }
+
+    fmt.Fprintf(os.Stderr, "%s: %s '%s' host: %s, body: %s\n",
 			time.Now().Format(time.RFC3339Nano),
-			req.Method, req.URL.Path, req.Host)
+			req.Method, req.URL.Path, req.Host, string(requestDump))
 	}
 
 	if req.Host == "puma-dev" {
